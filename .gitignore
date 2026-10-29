@@ -42,3 +42,10 @@ next-env.d.ts
 
 /lib/generated/prisma
 !.env.example
+
+# AI assistant instructions and planning prompts (kept locally, not published)
+AGENTS.md
+CLAUDE.md
+.claude/
+lojastp.md
+passos.md

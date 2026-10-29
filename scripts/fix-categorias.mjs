@@ -1,4 +1,4 @@
-// Repõe as categorias da loja de acordo com lojastp.md.
+// Repõe as categorias da loja de acordo com a lista definida abaixo.
 // Apaga da BD as categorias que não pertencem à lista e não têm produtos,
 // e cria/atualiza as corretas. Não toca em produtos.
 //

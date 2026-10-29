@@ -1,80 +1,101 @@
-# STP Market — Multi-vendor Marketplace
+# STP Market
 
-STP Market is a full-stack multi-vendor marketplace designed to connect products from São Tomé and Príncipe with customers in Portugal.
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-Checkout-635BFF?logo=stripe&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-The platform includes public shopping flows, vendor management, order processing, commissions, online payments and administrative tools.
+**A multi-vendor marketplace for products from São Tomé and Príncipe, sold to customers in Portugal.** Producers apply to sell, the admin approves them, customers pay with Stripe, and each sale is split between the vendor and the platform's commission.
 
-## Highlights
+**Live demo:** [stp-dusky.vercel.app](https://stp-dusky.vercel.app)
 
-- Multi-vendor product catalogue
-- Vendor applications and approval flow
-- Product and category management
-- Shopping cart and checkout
-- Stripe Checkout integration
-- Order management and stock updates
-- Vendor commissions and withdrawal requests
-- Admin dashboard
-- Transactional email flows
-- Cloud image management
-- Responsive interface
+![STP Market home page](docs/screenshots/home.png)
+
+## Features
+
+**Customers**
+- Catalogue with search, category filter and sorting
+- Cart, Stripe Checkout and order confirmation by email
+- Account with order history and order status
+- FAQ assistant for shipping, orders and selling questions
+
+**Vendors**
+- Application form with supporting documents, reviewed by the admin
+- Own product management with Cloudinary images
+- Balance from sales (after commission) and withdrawal requests
+- Password recovery
+
+**Admin**
+- Dashboard, products, categories and stock
+- Orders with status updates
+- Vendor applications, vendor accounts and withdrawals
+
+## How it works
+
+```mermaid
+sequenceDiagram
+  participant C as Customer
+  participant A as Next.js (Server Actions)
+  participant S as Stripe
+  participant W as Webhook
+  participant D as PostgreSQL
+  C->>A: Checkout
+  A->>D: Read current prices and stock
+  A->>S: Create Checkout session
+  C->>S: Pay
+  S->>W: checkout.session.completed
+  W->>D: Order exists for this payment? Stop
+  W->>D: Create order, split commission, decrement stock
+```
+
+- **Prices come from the database**, never from the browser: the checkout recalculates every line on the server.
+- **Idempotent webhook:** the Stripe signature is verified, and an order is created only once per payment intent, so a retried webhook cannot duplicate an order.
+- **Stock changes only after payment**, never when an item is added to the cart.
+- **Commission per sale:** each order item records the vendor amount and the platform commission (`COMMISSION_RATE`).
+- **Two authentication systems in one middleware:** customers sign in with Clerk; admin and vendor accounts use Auth.js (credentials, bcrypt, JWT sessions) on separate routes.
 
 ## Tech stack
 
-**Frontend**  
-Next.js 15 · React · TypeScript · Tailwind CSS · shadcn/ui
+| Area | Technologies |
+|---|---|
+| Front-end | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, shadcn/ui, React Hook Form |
+| Back-end | Server Actions, Route Handlers, Prisma, PostgreSQL (Neon), Zod |
+| Auth | Clerk (customers), Auth.js v5 (admin and vendors) |
+| Payments | Stripe Checkout and webhooks |
+| Media and email | Cloudinary, Brevo |
+| Deploy | Vercel |
 
-**Backend & data**  
-Next.js Server Actions · Route Handlers · PostgreSQL · Prisma ORM · Zod
+## Getting started
 
-**Authentication**  
-Auth.js v5 · JWT sessions · Credentials provider
-
-**Integrations**  
-Stripe · Cloudinary · Brevo · Vercel
-
-## Architecture and implementation
-
-The application uses the Next.js App Router and combines frontend and server-side functionality in the same codebase.
-
-Important implementation details include:
-
-- prices recalculated from the database during checkout instead of trusting client-side values;
-- idempotent Stripe webhook handling to avoid duplicate orders;
-- stock updates after successful payment;
-- vendor commission calculation per sale;
-- authenticated administration and vendor areas;
-- image uploads handled server-side through Cloudinary;
-- transactional emails for order confirmation and status updates.
-
-## Main areas
-
-### Customer
-
-Customers can browse products, search and filter the catalogue, manage a cart and complete payments through Stripe Checkout.
-
-### Administration
-
-Administrators can manage products, categories, orders, vendors, approvals, stock and withdrawals through a centralized dashboard.
-
-### Vendors
-
-Approved vendors can manage their own products, view sales information and request withdrawals.
-
-## Live demo
-
-[View STP Market](https://stp-teal.vercel.app)
-
-## Local development
+Requirements: Node.js 20+ and a PostgreSQL database.
 
 ```bash
-npm install
-npm run dev
+npm install                 # also generates the Prisma client
+cp .env.example .env        # database, Clerk, Auth.js, Stripe, Cloudinary, Brevo
+npx prisma migrate deploy
+npx prisma db seed          # creates the first admin from ADMIN_EMAIL / ADMIN_PASSWORD
+npm run dev                 # http://localhost:3000
 ```
 
-The project requires environment variables for PostgreSQL, authentication, Stripe, Cloudinary and Brevo. See `.env.example` for the expected configuration.
+To test payments locally, forward Stripe events with `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 
-## Developer
+## Project structure
 
-Developed by **Anderson Neto**.
+```text
+app/
+  (loja)/       public store: catalogue, product, cart, checkout, customer account
+  admin/        admin panel
+  fornecedor/   vendor panel
+  api/          Stripe webhook and other route handlers
+components/     UI components (shadcn/ui) and store components
+lib/            Prisma client, Stripe, Cloudinary, email, shipping rules
+prisma/         schema, migrations and seed
+```
 
-[Portfolio](https://andersonneto.gt.tc) · [LinkedIn](https://linkedin.com/in/anderson-fullstack-developer) · [GitHub](https://github.com/anderson-fullstack-developer)
+## Author
+
+**Anderson Neto**, Full-Stack Developer in Lisbon. [Portfolio](https://andersonneto.gt.tc) · [LinkedIn](https://linkedin.com/in/anderson-fullstack-developer)
+
+## License
+
+[MIT](LICENSE)

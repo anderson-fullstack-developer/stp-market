@@ -15,6 +15,12 @@ type Category = { id: string; slug: string; name: string };
 
 type Filters = { q: string; categoria: string; sort: string };
 
+const SORT_ITEMS = [
+  { value: "recent", label: "Mais recentes" },
+  { value: "price-asc", label: "Preço: menor primeiro" },
+  { value: "price-desc", label: "Preço: maior primeiro" },
+];
+
 export function StoreFilters({
   categories,
   defaultValues,
@@ -35,6 +41,12 @@ export function StoreFilters({
     if (values.sort) params.set("sort", values.sort);
     router.push(`/loja?${params.toString()}`);
   }
+
+  // The trigger shows the item label only when the Select knows the items.
+  const categoryItems = [
+    { value: "all", label: "Todas as categorias" },
+    ...categories.map((category) => ({ value: category.slug, label: category.name })),
+  ];
 
   const isFirstRender = useRef(true);
 
@@ -68,6 +80,7 @@ export function StoreFilters({
       />
 
       <Select
+        items={categoryItems}
         value={categoria || "all"}
         onValueChange={(value) => {
           const next = !value || value === "all" ? "" : value;
@@ -79,16 +92,16 @@ export function StoreFilters({
           <SelectValue placeholder="Categoria" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todas as categorias</SelectItem>
-          {categories.map((category) => (
-            <SelectItem key={category.id} value={category.slug}>
-              {category.name}
+          {categoryItems.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select
+        items={SORT_ITEMS}
         value={sort || "recent"}
         onValueChange={(value) => {
           const next = !value || value === "recent" ? "" : value;
@@ -100,9 +113,11 @@ export function StoreFilters({
           <SelectValue placeholder="Ordenar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="recent">Mais recentes</SelectItem>
-          <SelectItem value="price-asc">Preço: menor primeiro</SelectItem>
-          <SelectItem value="price-desc">Preço: maior primeiro</SelectItem>
+          {SORT_ITEMS.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </form>
