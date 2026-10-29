@@ -80,6 +80,22 @@ npm run dev                 # http://localhost:3000
 
 To test payments locally, forward Stripe events with `stripe listen --forward-to localhost:3000/api/stripe/webhook`.
 
+## Tests
+
+17 automated tests (Vitest) cover the money paths:
+
+- **Checkout pricing:** prices come from the database (a price sent by the browser is ignored), shipping thresholds, unavailable products and stock limits.
+- **Commission split:** rounded to the cent, with the vendor and platform parts always adding up to the line total.
+- **Stripe webhook:** missing or invalid signatures are rejected, a paid session creates the order and decrements stock, and a retried event for the same payment never creates a second order.
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
+
+GitHub Actions runs all three on every push.
+
 ## Project structure
 
 ```text

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { getCommissionRate } from "@/lib/commission";
+import { getCommissionRate, splitSale } from "@/lib/commission";
 import { getSiteUrl } from "@/lib/site-url";
 import {
   sendNewOrderAdminEmail,
@@ -85,9 +85,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, siteUrl
 
   const orderItemsData = lineItemsData.map(({ productId, quantity, price }) => {
     const vendorId = vendorByProductId.get(productId) ?? null;
-    const lineTotal = price * quantity;
-    const commissionAmount = vendorId ? lineTotal * commissionRate : null;
-    const vendorAmount = vendorId ? lineTotal - (commissionAmount ?? 0) : null;
+    const { commissionAmount, vendorAmount } = splitSale(price * quantity, commissionRate, vendorId !== null);
 
     return { productId, quantity, price, vendorId, commissionAmount, vendorAmount };
   });

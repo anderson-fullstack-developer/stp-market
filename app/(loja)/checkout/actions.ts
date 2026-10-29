@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getCurrentCustomer } from "@/lib/customer";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
-import { calculateShipping } from "@/lib/shipping";
+import { buildCheckout } from "@/lib/pricing";
 
 const checkoutInputSchema = z
   .array(
@@ -32,34 +32,7 @@ export async function createCheckoutSession(input: unknown) {
     },
   });
 
-  const lineItems = items.map((item) => {
-    const product = products.find((p) => p.id === item.productId);
-    if (!product) {
-      throw new Error("Um dos produtos do carrinho já não está disponível.");
-    }
-    if (item.quantity > product.stock) {
-      throw new Error(`Stock insuficiente para "${product.name}".`);
-    }
-
-    return {
-      quantity: item.quantity,
-      price_data: {
-        currency: "eur",
-        unit_amount: Math.round(product.price * 100),
-        product_data: {
-          name: product.name,
-          images: [product.imageUrl],
-          metadata: { productId: product.id },
-        },
-      },
-    };
-  });
-
-  const subtotal = items.reduce((sum, item) => {
-    const product = products.find((p) => p.id === item.productId)!;
-    return sum + product.price * item.quantity;
-  }, 0);
-  const shippingAmount = calculateShipping(subtotal);
+  const { lineItems, shippingAmount } = buildCheckout(items, products);
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
 
