@@ -1,5 +1,6 @@
 # STP Market
 
+[![CI](https://github.com/anderson-fullstack-developer/stp-market/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-fullstack-developer/stp-market/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-Checkout-635BFF?logo=stripe&logoColor=white)
